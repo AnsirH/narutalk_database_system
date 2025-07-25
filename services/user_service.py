@@ -1,0 +1,39 @@
+from passlib.context import CryptContext
+from models.employees import Employee
+from schemas.employee import EmployeeCreate
+from sqlalchemy.orm import Session
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def get_employee_by_email(db: Session, email: str):
+    return db.query(Employee).filter(Employee.email == email).first()
+
+def create_employee(db: Session, user: EmployeeCreate):
+    hashed_password = pwd_context.hash(user.password)
+    db_user = Employee(
+        email=user.email,
+        username=user.username,
+        password=hashed_password,
+        name=user.name,
+        team=user.team,
+        position=user.position,
+        business_unit=user.business_unit,
+        branch=user.branch,
+        contact_number=user.contact_number,
+        responsibilities=user.responsibilities,
+        base_salary=user.base_salary,
+        incentive_pay=user.incentive_pay,
+        avg_monthly_budget=user.avg_monthly_budget,
+        latest_evaluation=user.latest_evaluation,
+        role=user.role
+    )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+
+def get_all_employees(db: Session):
+    return db.query(Employee).all() 

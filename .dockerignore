@@ -1,0 +1,107 @@
+# Git 관련
+.git/
+.gitignore
+
+# Python 관련
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# 가상환경
+.venv/
+venv/
+env/
+ENV/
+.conda/
+
+# IDE 관련
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS 관련
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# 환경변수 파일 (보안상 제외)
+.env
+.env.*
+.env.local
+.env.production
+.env.test
+
+# 데이터 디렉터리 (컨테이너에서 생성됨)
+pgdata/
+pgadmin_data/
+minio_data/
+osdata1/
+osdata2/
+osdata3/
+
+# 문서 파일
+*.md
+*.pdf
+*.doc
+*.docx
+
+# requirements 파일은 제외하지 않음 (Docker 빌드에 필요)
+!requirements*.txt
+
+# 스크립트 파일
+generate_jwt_secret.py 
+*.sh
+*.bat
+
+# 로그 파일
+*.log
+logs/
+
+# 임시 파일
+*.tmp
+*.temp
+.cache/
+*.cache
+
+# 테스트 관련
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Node modules (혹시 있을 경우)
+node_modules/
+
+# Docker 관련
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# 기타
+*.bak
+*.backup
+*.orig 
