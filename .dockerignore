@@ -1,38 +1,37 @@
 # Git 관련
-.git/
+.git
 .gitignore
 
 # Python 관련
-__pycache__/
+__pycache__
 *.pyc
 *.pyo
 *.pyd
-*.py[cod]
-*$py.class
-*.so
 .Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
+env
+pip-log.txt
+pip-delete-this-directory.txt
+.tox
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git
+.mypy_cache
+.pytest_cache
+.hypothesis
 
-# 가상환경
-.venv/
-venv/
+# 환경 관련
+.env
+.venv
 env/
+venv/
 ENV/
-.conda/
+env.bak/
+venv.bak/
 
 # IDE 관련
 .vscode/
@@ -43,65 +42,23 @@ ENV/
 
 # OS 관련
 .DS_Store
-Thumbs.db
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
 ehthumbs.db
-Desktop.ini
+Thumbs.db
 
-# 환경변수 파일 (보안상 제외)
-.env
-.env.*
-.env.local
-.env.production
-.env.test
-
-# 데이터 디렉터리 (컨테이너에서 생성됨)
+# 프로젝트 특정
 pgdata/
-pgadmin_data/
 minio_data/
-osdata1/
-osdata2/
-osdata3/
-
-# 문서 파일
-*.md
-*.pdf
-*.doc
-*.docx
-
-# requirements 파일은 제외하지 않음 (Docker 빌드에 필요)
-!requirements*.txt
-
-# 스크립트 파일
-generate_jwt_secret.py 
-*.sh
-*.bat
-
-# 로그 파일
+osdata*/
+pgadmin_data/
 *.log
-logs/
+alembic/versions/*.py
+!alembic/versions/__init__.py
 
-# 임시 파일
-*.tmp
-*.temp
-.cache/
-*.cache
-
-# 테스트 관련
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
-.nox/
-
-# Node modules (혹시 있을 경우)
-node_modules/
-
-# Docker 관련
-Dockerfile*
-docker-compose*
-.dockerignore
-
-# 기타
-*.bak
-*.backup
-*.orig 
+# 문서 및 기타
+*.md
+!README.md
+!requirements*.txt 

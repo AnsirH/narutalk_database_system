@@ -9,9 +9,9 @@ class SalesRecord(Base):
     record_id = Column(Integer, primary_key=True, autoincrement=True)  # 매출 기록 고유 ID (자동 증가)
     
     # 관계 정보
-    employee_id = Column(Integer, ForeignKey("employees.employee_id"), nullable=False)  # 매출 담당 직원 ID (외래키, 필수)
-    customer_id = Column(Integer, ForeignKey("customers.customer_id"), nullable=False)  # 매출 발생 고객 ID (외래키, 필수)
-    product_id = Column(Integer, ForeignKey("products.product_id"), nullable=False)  # 판매된 제품 ID (외래키, 필수)
+    employee_id = Column(Integer, ForeignKey("employees.employee_id", ondelete="SET NULL"), nullable=True)  # 매출 담당 직원 ID (외래키, NULL 가능)
+    customer_id = Column(Integer, ForeignKey("customers.customer_id", ondelete="SET NULL"), nullable=True)  # 매출 발생 고객 ID (외래키, NULL 가능)
+    product_id = Column(Integer, ForeignKey("products.product_id", ondelete="SET NULL"), nullable=True)  # 판매된 제품 ID (외래키, NULL 가능)
     
     # 매출 정보
     sale_amount = Column(Numeric(15, 2), nullable=False)  # 매출 금액 (소수점 2자리까지, 필수)

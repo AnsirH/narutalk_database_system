@@ -1,28 +1,5 @@
-fastapi
-uvicorn
-sqlalchemy
-passlib
-bcrypt
-python-jose
-pydantic
-pydantic[email]
-pydantic-settings
-boto3
-python-multipart
-opensearch-py
-alembic
-psycopg2-binary
-python-dotenv
-sentence-transformers
-FlagEmbedding
-transformers
-huggingface_hub
-psutil
-openai
-python-docx
-PyPDF2
-langchain-openai
-langchain-core
-pandas
-openpyxl
-xlrd
+# 기본 의존성
+-r requirements-base.txt
+
+# ML 의존성
+-r requirements-ml.txt

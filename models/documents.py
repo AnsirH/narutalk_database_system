@@ -8,7 +8,7 @@ class Document(Base):
     # 기본 식별 정보
     doc_id = Column(Integer, primary_key=True, autoincrement=True)  # 문서 고유 ID (자동 증가)
     
-    # 업로드 정보
+    # 업로드 정보 (역사적 기록이므로 NULL 불가)
     uploader_id = Column(Integer, ForeignKey("employees.employee_id"), nullable=False)  # 문서 업로드한 직원 ID (외래키, 필수)
     
     # 문서 정보

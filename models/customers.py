@@ -1,5 +1,5 @@
 from . import Base
-from sqlalchemy import Column, Integer, String, DateTime, func
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, func
 
 class Customer(Base):
     """고객(의료기관) 정보를 관리하는 테이블"""
@@ -26,6 +26,10 @@ class Customer(Base):
     
     # 기타 정보
     notes = Column(String)  # 고객 관련 특이사항 및 메모
+    
+    # Soft Delete 관련 필드
+    is_deleted = Column(Boolean, default=False)  # 논리적 삭제 상태 (기본값: 삭제되지 않음)
+    deleted_at = Column(DateTime)  # 논리적 삭제 일시
     
     # 시스템 정보
     created_at = Column(DateTime, default=func.now())  # 고객 등록 일시 (자동 설정) 

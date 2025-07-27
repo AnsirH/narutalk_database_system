@@ -11,14 +11,15 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# 기본 Python 의존성 파일 복사 및 설치
-COPY requirements-base.txt .
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements-base.txt
-
-# ML 의존성 파일 복사 및 설치 (별도 레이어)
+# ML 의존성 먼저 설치 (자주 변경되지 않음)
 COPY requirements-ml.txt .
-RUN pip install --no-cache-dir -r requirements-ml.txt && \
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements-ml.txt && \
+    rm -rf ~/.cache/pip/*
+
+# 기본 Python 의존성 설치 (더 자주 변경됨)
+COPY requirements-base.txt .
+RUN pip install --no-cache-dir -r requirements-base.txt && \
     rm -rf ~/.cache/pip/*
 
 # 실행 스테이지

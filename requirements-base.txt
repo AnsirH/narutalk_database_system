@@ -18,7 +18,7 @@ openai
 python-docx
 PyPDF2
 langchain-openai
-langchain-core 
+langchain-core
 pandas
 openpyxl
 xlrd

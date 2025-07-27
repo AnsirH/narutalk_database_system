@@ -34,6 +34,10 @@ class Employee(Base):
     role = Column(String, nullable=False)  # 시스템 내 역할 (예: admin, user, manager, 필수)
     is_active = Column(Boolean, default=True)  # 계정 활성화 상태 (기본값: 활성)
     
+    # Soft Delete 관련 필드
+    is_deleted = Column(Boolean, default=False)  # 논리적 삭제 상태 (기본값: 삭제되지 않음)
+    deleted_at = Column(DateTime)  # 논리적 삭제 일시
+    
     # 시스템 정보
     created_at = Column(DateTime, default=func.now())  # 계정 생성 일시 (자동 설정)
     

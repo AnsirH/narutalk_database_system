@@ -8,7 +8,7 @@ class AssignmentMap(Base):
     # 기본 식별 정보
     assignment_id = Column(Integer, primary_key=True, autoincrement=True)  # 배정 관계 고유 ID (자동 증가)
     
-    # 관계 정보
+    # 관계 정보 (역사적 기록이므로 NULL 불가)
     employee_id = Column(Integer, ForeignKey("employees.employee_id"), nullable=False)  # 배정된 직원 ID (외래키, 필수)
     customer_id = Column(Integer, ForeignKey("customers.customer_id"), nullable=False)  # 배정된 고객 ID (외래키, 필수)
     

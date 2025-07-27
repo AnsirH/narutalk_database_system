@@ -8,7 +8,7 @@ class InteractionLog(Base):
     # 기본 식별 정보
     log_id = Column(Integer, primary_key=True, autoincrement=True)  # 상호작용 로그 고유 ID (자동 증가)
     
-    # 관계 정보
+    # 관계 정보 (역사적 기록이므로 NULL 불가)
     employee_id = Column(Integer, ForeignKey("employees.employee_id"), nullable=False)  # 상호작용한 직원 ID (외래키, 필수)
     customer_id = Column(Integer, ForeignKey("customers.customer_id"), nullable=False)  # 상호작용한 고객 ID (외래키, 필수)
     
