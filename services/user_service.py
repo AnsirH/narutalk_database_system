@@ -15,16 +15,6 @@ def create_employee(db: Session, user: EmployeeCreate):
         username=user.username,
         password=hashed_password,
         name=user.name,
-        team=user.team,
-        position=user.position,
-        business_unit=user.business_unit,
-        branch=user.branch,
-        contact_number=user.contact_number,
-        responsibilities=user.responsibilities,
-        base_salary=user.base_salary,
-        incentive_pay=user.incentive_pay,
-        avg_monthly_budget=user.avg_monthly_budget,
-        latest_evaluation=user.latest_evaluation,
         role=user.role
     )
     db.add(db_user)

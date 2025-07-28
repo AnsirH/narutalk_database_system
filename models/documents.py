@@ -1,5 +1,6 @@
 from . import Base
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, func
+from sqlalchemy.orm import relationship
 
 class Document(Base):
     """문서 정보를 관리하는 테이블"""
@@ -18,4 +19,6 @@ class Document(Base):
     version = Column(String)  # 문서 버전 (예: 1.0, 2.1)
     
     # 시스템 정보
-    created_at = Column(DateTime, default=func.now())  # 문서 업로드 일시 (자동 설정) 
+    created_at = Column(DateTime, default=func.now())  # 문서 업로드 일시 (자동 설정)
+    
+ 

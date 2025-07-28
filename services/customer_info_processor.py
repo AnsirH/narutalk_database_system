@@ -53,9 +53,10 @@ def process_customer_info(table_data: List[Dict[str, Any]], engine=None) -> int:
             except Exception:
                 total_patients = None
             
-            # 4. customers 테이블에서 기존 고객 확인 (고객명만으로 체크)
+            # 4. customers 테이블에서 기존 고객 확인 (고객명 + 주소 조합으로 체크)
             existing_customer = db.query(Customer).filter(
-                Customer.customer_name == customer_name
+                Customer.customer_name == customer_name,
+                Customer.address == address
             ).first()
             
             if existing_customer:

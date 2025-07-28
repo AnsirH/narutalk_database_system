@@ -13,6 +13,7 @@ class EmployeeInfo(Base):
     
     # 직원 기본 정보 (문서에서 업데이트 가능)
     name = Column(String, nullable=False)  # 직원 실명 (필수)
+    employee_number = Column(String, unique=True)  # 사번 (고유값, 동명이인 구분용)
     
     # 조직 정보
     team = Column(String)  # 소속 팀명 (예: 영업팀, 마케팅팀)
@@ -20,9 +21,8 @@ class EmployeeInfo(Base):
     business_unit = Column(String)  # 사업부 (예: 제약사업부, 의료사업부)
     branch = Column(String)  # 지점/지사명
     
-    # 연락처 및 업무 정보
+    # 연락처 정보
     contact_number = Column(String)  # 연락처 전화번호
-    responsibilities = Column(String)  # 담당 업무 영역 설명
     
     # 급여 및 예산 정보
     base_salary = Column(Integer)  # 기본급 (원 단위)

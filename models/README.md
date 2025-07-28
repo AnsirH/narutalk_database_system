@@ -24,13 +24,16 @@ Table Employees as E {
 Table Customers as C {
   customer_id int [pk, increment, note: '거래처 고유 식별자']
   customer_name varchar(100) [not null, note: '거래처 이름']
-  customer_type varchar(20) [note: '거래처 종류 (병원, 약국 등)']
   address varchar(255) [note: '거래처 주소']
   doctor_name varchar(50) [note: '주요 담당 의사/약사 이름']
   total_patients int [note: '총 환자 수']
   customer_grade varchar(10) [note: '고객 등급']
   notes text [note: '성향, 특징 등 기타 메모']
   created_at timestamp [note: '정보 최초 등록일']
+  
+  indexes {
+    (customer_name, address) [unique, note: '같은 지역의 같은 이름은 중복 불가']
+  }
 }
 
 Table Customer_Monthly_Performance_MV as CMP [note: 'Materialized View'] {

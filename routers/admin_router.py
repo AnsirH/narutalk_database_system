@@ -44,6 +44,7 @@ def init_admin(user: EmployeeCreate, db: Session = Depends(get_db)):
 def run_alembic_migration():
     """
     Alembic migration을 실행하는 관리자용 API입니다.
+    기존 테이블을 모두 삭제하고 새로 생성합니다.
     운영 환경에서는 반드시 인증/권한 체크를 추가하세요!
     """
     try:
@@ -55,15 +56,33 @@ def run_alembic_migration():
         current_dir = os.path.dirname(os.path.abspath(__file__))
         backend_dir = os.path.join(current_dir, "..")
         
-        result = subprocess.run(
+        # 1. 기존 마이그레이션을 모두 되돌리기 (테이블 삭제)
+        # IF EXISTS 옵션으로 안전하게 처리
+        downgrade_result = subprocess.run(
+            ["alembic", "downgrade", "base"],
+            cwd=backend_dir,
+            capture_output=True,
+            text=True,
+            check=False  # downgrade 실패해도 계속 진행
+        )
+        
+        # 2. 최신 마이그레이션으로 업그레이드 (테이블 재생성)
+        upgrade_result = subprocess.run(
             ["alembic", "upgrade", "head"],
-            cwd=backend_dir,  # alembic.ini가 있는 backend 디렉터리
+            cwd=backend_dir,
             capture_output=True,
             text=True,
             check=True,
             env=env
         )
-        return {"success": True, "stdout": result.stdout}
+        
+        return {
+            "success": True, 
+            "message": "테이블 삭제 후 재생성 완료",
+            "downgrade_stdout": downgrade_result.stdout,
+            "downgrade_stderr": downgrade_result.stderr,
+            "upgrade_stdout": upgrade_result.stdout
+        }
     except subprocess.CalledProcessError as e:
         return {"success": False, "stderr": e.stderr}
 

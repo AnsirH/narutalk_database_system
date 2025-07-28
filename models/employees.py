@@ -4,7 +4,7 @@ from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 
 class Employee(Base):
-    """직원 정보를 관리하는 테이블"""
+    """직원 계정 정보를 관리하는 테이블"""
     __tablename__ = "employees"
     
     # 기본 식별 정보
@@ -14,23 +14,7 @@ class Employee(Base):
     password = Column(String, nullable=False)  # 로그인 비밀번호 (해시화된 값, 필수)
     name = Column(String, nullable=False)  # 직원 실명 (필수)
     
-    # 조직 정보
-    team = Column(String)  # 소속 팀명 (예: 영업팀, 마케팅팀)
-    position = Column(String)  # 직급 (예: 대리, 과장, 차장)
-    business_unit = Column(String)  # 사업부 (예: 제약사업부, 의료사업부)
-    branch = Column(String)  # 지점/지사명
-    
-    # 연락처 및 업무 정보
-    contact_number = Column(String)  # 연락처 전화번호
-    responsibilities = Column(String)  # 담당 업무 영역 설명
-    
-    # 급여 및 예산 정보
-    base_salary = Column(Integer)  # 기본급 (원 단위)
-    incentive_pay = Column(Integer)  # 인센티브/성과급 (원 단위)
-    avg_monthly_budget = Column(Integer)  # 월 평균 업무 예산 (원 단위)
-    
-    # 평가 및 상태 정보
-    latest_evaluation = Column(String)  # 최근 평가 결과 (예: A, B, C 등급)
+    # 시스템 역할
     role = Column(String, nullable=False)  # 시스템 내 역할 (예: admin, user, manager, 필수)
     is_active = Column(Boolean, default=True)  # 계정 활성화 상태 (기본값: 활성)
     
@@ -41,5 +25,5 @@ class Employee(Base):
     # 시스템 정보
     created_at = Column(DateTime, default=func.now())  # 계정 생성 일시 (자동 설정)
     
-    # 관계 설정 (선택적)
+    # 관계 설정
     employee_info = relationship("EmployeeInfo", back_populates="employee", uselist=False)

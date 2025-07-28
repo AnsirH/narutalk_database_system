@@ -4,7 +4,6 @@ from datetime import datetime
 
 class CustomerBase(BaseModel):
     customer_name: str
-    customer_type: Optional[str] = None
     address: Optional[str] = None
     doctor_name: Optional[str] = None
     total_patients: Optional[int] = None
