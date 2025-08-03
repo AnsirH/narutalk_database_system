@@ -8,7 +8,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
 from typing import Dict, Any, Optional
 import logging
-from app.services.opensearch_service import question_answering, opensearch_client
+from app.services.external.opensearch_service import question_answering, opensearch_client
 
 # 로깅 설정
 logger = logging.getLogger(__name__)

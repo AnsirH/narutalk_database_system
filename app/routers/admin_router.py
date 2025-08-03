@@ -1,14 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.schemas.employee import EmployeeCreate, EmployeeInfo
-from app.services.user_service import get_employee_by_email, create_employee
-from app.services.db import get_db
+from app.services.processors.user_service import get_employee_by_email, create_employee
+from app.services.utils.db import get_db
 from app.models.employees import Employee
 from sqlalchemy.exc import IntegrityError
 from app.routers.user_router import get_current_admin_user
-from app.services.opensearch_service import DOCUMENT_INDEX_NAME
+from app.services.external.opensearch_service import DOCUMENT_INDEX_NAME
 from app.config import settings
-from app.services.opensearch_client import opensearch_client
+from app.services.external.opensearch_client import opensearch_client
 
 
 router = APIRouter()

@@ -3,9 +3,9 @@ import re
 from typing import List, Dict, Any
 from sqlalchemy.orm import Session
 from app.models.customers import Customer
-from app.services.db import get_db
+from app.services.utils.db import get_db
 from sqlalchemy.exc import SQLAlchemyError
-from app.services.customer_utils import extract_name_and_address
+from app.services.utils.customer_utils import extract_name_and_address
 
 logger = logging.getLogger(__name__)
 

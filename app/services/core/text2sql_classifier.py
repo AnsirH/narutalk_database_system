@@ -10,12 +10,12 @@ from typing import List, Dict, Any, Optional, Callable
 from contextlib import contextmanager
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 
 # 공통 OpenAI 서비스 import
-from app.services.openai_service import openai_service
-from app.services.customer_utils import extract_address_from_name, extract_address_and_clean_name
+from app.services.external.openai_service import openai_service
+from app.services.utils.customer_utils import extract_address_from_name, extract_address_and_clean_name
 
 # 모델 import
 from app.models.employees import Employee
@@ -982,7 +982,7 @@ JSON 형식으로 응답:
                     interaction_date = self._parse_date(str(row[column_mapping['interacted_at']]))
                 
                 if not interaction_date:
-                    interaction_date = datetime.utcnow()
+                    interaction_date = datetime.now(timezone.utc)
                 
                 # 고객 ID 찾기 (customer_name으로만 조회 - address 정보가 없으므로)
                 customer_id = None
@@ -1340,5 +1340,5 @@ JSON 형식으로 응답:
 
 
 # 싱글턴 인스턴스
-from app.services.db import SessionLocal
+from app.services.utils.db import SessionLocal
 text2sql_classifier = Text2SQLTableClassifier(db_session_factory=SessionLocal) 

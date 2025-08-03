@@ -1,5 +1,5 @@
 from . import Base
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, func
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, func, Boolean
 from sqlalchemy.orm import relationship
 
 class ChatSession(Base):
@@ -18,6 +18,10 @@ class ChatSession(Base):
     # 시간 정보
     created_at = Column(DateTime, nullable=False, default=func.now())  # 세션 생성 일시 (필수, 자동 설정)
     last_activity = Column(DateTime, nullable=False, default=func.now())  # 마지막 활동 일시 (필수, 자동 설정)
+    
+    # 아카이브 관련 필드
+    is_archived = Column(Boolean, default=False)  # 아카이브 상태 (기본값: 활성)
+    archived_at = Column(DateTime)  # 아카이브 일시
     
     # 관계 설정
     employee = relationship("Employee", backref="chat_sessions")

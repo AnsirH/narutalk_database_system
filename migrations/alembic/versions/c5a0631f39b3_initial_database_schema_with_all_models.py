@@ -64,6 +64,8 @@ def upgrade() -> None:
     sa.Column('session_title', sa.String(length=500), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('last_activity', sa.DateTime(), nullable=False),
+    sa.Column('is_archived', sa.Boolean(), nullable=True, default=False),
+    sa.Column('archived_at', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['employee_id'], ['employees.employee_id'], ),
     sa.PrimaryKeyConstraint('session_id')
     )
@@ -109,7 +111,7 @@ def upgrade() -> None:
     sa.UniqueConstraint('employee_id', 'customer_id', name='uq_assignment_employee_customer')
     )
     op.create_table('chat_history',
-    sa.Column('message_id', sa.BigInteger(), autoincrement=True, nullable=False),
+    sa.Column('message_id', sa.String(length=36), nullable=False),
     sa.Column('session_id', sa.String(length=255), nullable=False),
     sa.Column('employee_id', sa.Integer(), nullable=False),
     sa.Column('role', sa.String(length=20), nullable=False),
@@ -158,7 +160,7 @@ def upgrade() -> None:
     )
     op.create_table('system_trace_logs',
     sa.Column('trace_id', sa.BigInteger(), autoincrement=True, nullable=False),
-    sa.Column('message_id', sa.BigInteger(), nullable=False),
+    sa.Column('message_id', sa.String(length=36), nullable=False),
     sa.Column('event_type', sa.String(), nullable=True),
     sa.Column('log_data', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
     sa.Column('latency_ms', sa.Integer(), nullable=True),

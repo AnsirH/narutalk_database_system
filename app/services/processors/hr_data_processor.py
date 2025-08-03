@@ -7,7 +7,7 @@ import logging
 from typing import List, Dict, Any
 from sqlalchemy.orm import Session
 from app.models.employees import Employee
-from app.services.db import get_db
+from app.services.utils.db import get_db
 import re
 from passlib.context import CryptContext
 

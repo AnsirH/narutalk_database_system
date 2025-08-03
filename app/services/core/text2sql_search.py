@@ -7,8 +7,8 @@ import logging
 import json
 from typing import Dict, Any, List, Optional
 from sqlalchemy import text
-from app.services.openai_service import openai_service
-from app.services.db import SessionLocal
+from app.services.external.openai_service import openai_service
+from app.services.utils.db import SessionLocal
 
 logger = logging.getLogger(__name__)
 

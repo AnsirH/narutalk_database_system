@@ -7,7 +7,7 @@ from app.models.document_relations import DocumentRelation
 from app.models.customers import Customer
 from app.models.products import Product
 from app.models.employees import Employee
-from app.services.openai_service import openai_service
+from app.services.external.openai_service import openai_service
 
 logger = logging.getLogger(__name__)
 
@@ -340,5 +340,5 @@ class DocumentRelationAnalyzer:
             }
 
 # 전역 인스턴스
-from app.services.db import SessionLocal
+from app.services.utils.db import SessionLocal
 document_relation_analyzer = DocumentRelationAnalyzer(db_session_factory=SessionLocal) 

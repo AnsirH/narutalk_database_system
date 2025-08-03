@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
-from app.services.hybrid_search_service import hybrid_search_service
+from app.services.core.hybrid_search_service import hybrid_search_service
 from app.routers.user_router import get_current_user
 import logging
 

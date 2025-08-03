@@ -7,7 +7,7 @@ class ChatHistory(Base):
     __tablename__ = "chat_history"
     
     # 기본 식별 정보
-    message_id = Column(BigInteger, primary_key=True, autoincrement=True)  # 메시지 고유 ID (자동 증가, 큰 정수)
+    message_id = Column(String(36), primary_key=True)  # 메시지 고유 ID (UUID 문자열)
     
     # 세션 정보
     session_id = Column(String(255), ForeignKey("chat_sessions.session_id"), nullable=False)  # 채팅 세션 ID (외래키, 필수)

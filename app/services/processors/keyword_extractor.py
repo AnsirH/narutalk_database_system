@@ -11,7 +11,7 @@ from typing import List, Tuple, Union, Dict
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from app.config import settings
-from app.services.keyword_utils import extract_keywords_fallback, extract_keywords_with_scores
+from app.services.utils.keyword_utils import extract_keywords_fallback, extract_keywords_with_scores
 
 logger = logging.getLogger(__name__)
 

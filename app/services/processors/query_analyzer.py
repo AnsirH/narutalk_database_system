@@ -1,7 +1,7 @@
 import logging
 from typing import Dict, Any, List, Optional
 import json
-from app.services.openai_service import openai_service
+from app.services.external.openai_service import openai_service
 
 logger = logging.getLogger(__name__)
 

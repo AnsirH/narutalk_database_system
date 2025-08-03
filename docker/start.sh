@@ -3,15 +3,12 @@ set -e
 
 echo "🚀 애플리케이션 시작 중..."
 
-# ML 라이브러리 설치 (첫 실행 시에만)
-if [ ! -f /app/.ml_installed ]; then
-    echo "📦 ML 라이브러리 설치 중..."
-    pip install --no-cache-dir -r /app/requirements-ml.txt
-    touch /app/.ml_installed
-    echo "✅ ML 라이브러리 설치 완료"
-else
-    echo "✅ ML 라이브러리 이미 설치됨"
-fi
+# pip 업그레이드 및 ML 라이브러리 설치 (pip 캐시 활용)
+echo "📦 pip 업그레이드 중..."
+pip install --upgrade pip
+echo "📦 ML 라이브러리 설치 확인 중..."
+pip install -r /app/requirements-ml.txt
+echo "✅ ML 라이브러리 설치 완료"
 
 # PostgreSQL 연결 대기
 echo "⏳ PostgreSQL 연결 대기 중..."
@@ -46,10 +43,6 @@ except Exception as e:
     echo "⏳ PostgreSQL 연결 재시도 중..."
     sleep 2
 done
-
-# 자동 마이그레이션 실행
-echo "🔄 자동 마이그레이션 실행 중..."
-cd /app && python migrations/scripts/auto_migrate.py
 
 # 애플리케이션 실행
 echo "🚀 FastAPI 애플리케이션 시작..."

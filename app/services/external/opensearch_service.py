@@ -1,4 +1,4 @@
-from app.services.opensearch_client import opensearch_client
+from app.services.external.opensearch_client import opensearch_client
 import re
 import logging
 from typing import List, Dict, Any, Optional
@@ -10,8 +10,8 @@ SEARCH_PIPELINE_ID = "hybrid-minmax-pipeline"
 logger = logging.getLogger(__name__)
 
 # 고급 키워드 추출 서비스 import
-from app.services.keyword_extractor import keyword_extractor
-from app.services.keyword_utils import extract_keywords_fallback
+from app.services.processors.keyword_extractor import keyword_extractor
+from app.services.utils.keyword_utils import extract_keywords_fallback
 
 # Search Pipeline 초기화 함수
 def initialize_search_pipeline():

@@ -2,13 +2,13 @@ from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
 from typing import List, Optional, Union, Dict
 from datetime import datetime, timezone
 from app.schemas.document import DocumentBase, DocumentInfo
-from app.services.s3_service import upload_file, delete_file_from_s3
-from app.services.postgres_service import save_document, get_documents, get_document_by_id, delete_document_from_postgres
-from app.services.opensearch_service import index_document_chunks, delete_document_chunks_from_opensearch, DOCUMENT_INDEX_NAME
-from app.services.document_relation_analyzer import document_relation_analyzer
+from app.services.external.s3_service import upload_file, delete_file_from_s3
+from app.services.external.postgres_service import save_document, get_documents, get_document_by_id, delete_document_from_postgres
+from app.services.external.opensearch_service import index_document_chunks, delete_document_chunks_from_opensearch, DOCUMENT_INDEX_NAME
+from app.services.core.document_relation_analyzer import document_relation_analyzer
 
-from app.services.document_analyzer import document_analyzer
-from app.services.text2sql_classifier import text2sql_classifier
+from app.services.core.document_analyzer import document_analyzer
+from app.services.core.text2sql_classifier import text2sql_classifier
 from app.routers.user_router import get_current_user, get_current_admin_user
 from pydantic import BaseModel
 import logging

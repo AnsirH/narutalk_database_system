@@ -10,7 +10,7 @@ from app.routers.qa_router import router as qa_router
 from app.routers.hybrid_search_router import router as hybrid_search_router
 from app.routers.chat_history_router import router as chat_history_router
 from fastapi import FastAPI
-from app.services.opensearch_service import initialize_search_pipeline
+from app.services.external.opensearch_service import initialize_search_pipeline
 
 # 로깅 설정 - 터미널에서 모든 로그 보이도록
 logging.basicConfig(
@@ -55,7 +55,7 @@ async def lifespan(app: FastAPI):
     logger.info("🤖 AI 모델 로딩 스레드 시작...")
     def load_models():
         try:
-            from app.services.opensearch_client import opensearch_client
+            from app.services.external.opensearch_client import opensearch_client
             if opensearch_client:
                 # 임베딩 모델 사전 로드
                 embedding_model = opensearch_client.model

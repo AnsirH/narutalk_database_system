@@ -1,5 +1,5 @@
 from app.models.documents import Document
-from app.services.db import SessionLocal
+from app.services.utils.db import SessionLocal
 from app.schemas.document import DocumentBase
 from sqlalchemy.orm import Session
 from typing import List, Optional

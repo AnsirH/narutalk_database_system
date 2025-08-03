@@ -1,9 +1,10 @@
 import logging
 from typing import Dict, Any, List, Optional
-from app.services.opensearch_client import opensearch_client
-from app.services.query_analyzer import query_analyzer
-from app.services.text2sql_search import text2sql_search_service
+from app.services.external.opensearch_client import opensearch_client
+from app.services.processors.query_analyzer import query_analyzer
+from app.services.core.text2sql_search import text2sql_search_service
 import time
+from app.services.external.opensearch_service import DOCUMENT_INDEX_NAME
 
 logger = logging.getLogger(__name__)
 
@@ -92,7 +93,6 @@ class HybridSearchService:
         """텍스트 문서 검색"""
         try:
             # OpenSearch 검색 수행
-            from app.services.opensearch_service import DOCUMENT_INDEX_NAME
             text_results = opensearch_client.search_document(DOCUMENT_INDEX_NAME, {
                 "query": {
                     "multi_match": {
