@@ -1,0 +1,220 @@
+// Database Schema for Enterprise Management System
+// Generated from SQLAlchemy models
+
+Table employees {
+  employee_id integer [primary key, increment]
+  email varchar [unique, not null]
+  username varchar [unique, not null]
+  password varchar [not null]
+  name varchar [not null]
+  role varchar [not null]
+  is_active boolean [default: true]
+  is_deleted boolean [default: false]
+  deleted_at datetime
+  created_at datetime [default: `now()`]
+  
+  indexes {
+    (email)
+    (username)
+  }
+}
+
+Table employee_info {
+  employee_info_id integer [primary key, increment]
+  employee_id integer [null, ref: > employees.employee_id]
+  name varchar [not null]
+  employee_number varchar [unique]
+  team varchar
+  position varchar
+  business_unit varchar
+  branch varchar
+  contact_number varchar
+  base_salary integer
+  incentive_pay integer
+  avg_monthly_budget integer
+  latest_evaluation varchar
+  responsibilities varchar
+  created_at datetime [default: `now()`]
+  updated_at datetime [default: `now()`]
+  
+  indexes {
+    (employee_id)
+    (employee_number)
+  }
+}
+
+Table customers {
+  customer_id integer [primary key, increment]
+  customer_name varchar [not null]
+  address varchar
+  doctor_name varchar
+  total_patients integer
+  customer_grade varchar
+  notes varchar
+  is_deleted boolean [default: false]
+  deleted_at datetime
+  created_at datetime [default: `now()`]
+  
+  indexes {
+    (customer_name, address) [unique]
+  }
+}
+
+Table products {
+  product_id integer [primary key, increment]
+  product_name varchar [not null]
+  description varchar
+  category varchar
+  is_active boolean [default: true]
+}
+
+Table sales_records {
+  record_id integer [primary key, increment]
+  employee_id integer [null, ref: > employee_info.employee_info_id]
+  customer_id integer [null, ref: > customers.customer_id]
+  product_id integer [null, ref: > products.product_id]
+  sale_amount decimal(15,2) [not null]
+  sale_date date [not null]
+  
+  indexes {
+    (employee_id)
+    (customer_id)
+    (product_id)
+    (sale_date)
+  }
+}
+
+Table interaction_logs {
+  log_id integer [primary key, increment]
+  employee_id integer [not null, ref: > employee_info.employee_info_id]
+  customer_id integer [not null, ref: > customers.customer_id]
+  interaction_type varchar
+  summary varchar
+  sentiment varchar
+  compliance_risk varchar
+  interacted_at datetime
+  
+  indexes {
+    (employee_id)
+    (customer_id)
+    (interacted_at)
+  }
+}
+
+Table documents {
+  doc_id integer [primary key, increment]
+  uploader_id integer [not null, ref: > employees.employee_id]
+  doc_title varchar [not null]
+  doc_type varchar
+  file_path varchar [not null]
+  version varchar
+  created_at datetime [default: `now()`]
+  
+  indexes {
+    (uploader_id)
+    (doc_type)
+  }
+}
+
+Table document_relations {
+  relation_id integer [primary key, increment]
+  doc_id integer [not null, ref: > documents.doc_id]
+  related_entity_type varchar [not null]
+  related_entity_id integer [not null]
+  confidence_score integer [default: 100]
+  created_at datetime [default: `now()`]
+  
+  indexes {
+    (doc_id, related_entity_type, related_entity_id) [unique]
+    (related_entity_type, related_entity_id)
+  }
+}
+
+Table chat_sessions {
+  session_id varchar(255) [primary key]
+  employee_id integer [not null, ref: > employees.employee_id]
+  session_title varchar(500)
+  created_at datetime [not null, default: `now()`]
+  last_activity datetime [not null, default: `now()`]
+  is_archived boolean [default: false]
+  archived_at datetime
+  
+  indexes {
+    (employee_id)
+    (created_at)
+  }
+}
+
+Table chat_history {
+  message_id varchar(36) [primary key]
+  session_id varchar(255) [not null, ref: > chat_sessions.session_id]
+  employee_id integer [not null, ref: > employees.employee_id]
+  role varchar(20) [not null]
+  message_text text [not null]
+  expires_at datetime
+  created_at datetime [not null, default: `now()`]
+  
+  indexes {
+    (session_id)
+    (employee_id)
+    (created_at)
+  }
+}
+
+Table system_trace_logs {
+  trace_id bigint [primary key, increment]
+  message_id bigint [not null, ref: > chat_history.message_id]
+  event_type varchar
+  log_data jsonb
+  latency_ms integer
+  created_at datetime [not null, default: `now()`]
+  
+  indexes {
+    (message_id)
+    (event_type)
+    (created_at)
+  }
+}
+
+Table assignment_map {
+  assignment_id integer [primary key, increment]
+  employee_id integer [not null, ref: > employee_info.employee_info_id]
+  customer_id integer [not null, ref: > customers.customer_id]
+  
+  indexes {
+    (employee_id, customer_id) [unique]
+    (employee_id)
+    (customer_id)
+  }
+}
+
+// Materialized View (for reference)
+Table customer_monthly_performance_mv {
+  performance_id integer [primary key]
+  customer_id integer [ref: > customers.customer_id]
+  year_month varchar
+  monthly_sales integer
+  budget_used integer
+  visit_count integer
+  
+  indexes {
+    (customer_id)
+    (year_month)
+  }
+}
+
+// Relationships
+Ref: employees.employee_id < employee_info.employee_id
+Ref: employees.employee_id < documents.uploader_id
+Ref: employees.employee_id < chat_sessions.employee_id
+Ref: employees.employee_id < chat_history.employee_id
+Ref: employee_info.employee_info_id < sales_records.employee_id
+Ref: employee_info.employee_info_id < interaction_logs.employee_id
+Ref: employee_info.employee_info_id < assignment_map.employee_id
+Ref: customers.customer_id < sales_records.customer_id
+Ref: customers.customer_id < interaction_logs.customer_id
+Ref: customers.customer_id < assignment_map.customer_id
+Ref: products.product_id < sales_records.product_id
+Ref: documents.doc_id < document_relations.doc_id
+Ref: chat_sessions.session_id < chat_history.session_id
+Ref: chat_history.message_id < system_trace_logs.message_id 

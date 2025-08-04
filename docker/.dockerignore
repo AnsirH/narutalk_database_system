@@ -19,7 +19,6 @@ nosetests.xml
 coverage.xml
 *.cover
 *.log
-.git
 .mypy_cache
 .pytest_cache
 .hypothesis
@@ -49,16 +48,74 @@ venv.bak/
 ehthumbs.db
 Thumbs.db
 
-# 프로젝트 특정
-pgdata/
-minio_data/
-osdata*/
-pgadmin_data/
-*.log
-alembic/versions/*.py
-!alembic/versions/__init__.py
+# 프로젝트 특정 - Docker 관련 데이터 폴더
+docker/pgdata/
+docker/minio_data/
+docker/osdata*/
+docker/pgadmin_data/
+docker/.cache/
 
-# 문서 및 기타
+# 프로젝트 특정 - 개발 도구
+util_sctips/
+aws-migration-plan.md
+database_diagram.dbml
+
+# 문서 (빌드에 불필요한 문서들)
+docs/
 *.md
 !README.md
-!requirements*.txt 
+!requirements*.txt
+
+# 마이그레이션 버전 파일 (런타임에 생성됨)
+migrations/alembic/versions/*.py
+!migrations/alembic/versions/__init__.py
+
+# 로그 파일
+*.log
+logs/
+
+# 임시 파일
+tmp/
+temp/
+.tmp/
+
+# 테스트 관련
+tests/
+test_*
+*_test.py
+
+# 개발 도구 설정
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Docker 관련
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# CI/CD 관련
+.github/
+.gitlab-ci.yml
+.travis.yml
+.circleci/
+
+# 백업 파일
+*.bak
+*.backup
+*.old
+
+# 압축 파일
+*.zip
+*.tar.gz
+*.rar
+
+# 데이터베이스 덤프
+*.sql
+*.dump
+
+# 환경별 설정 파일
+.env.local
+.env.development
+.env.production
+.env.test 

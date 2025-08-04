@@ -7,40 +7,42 @@ logger = logging.getLogger(__name__)
 # AWS S3 또는 MinIO 설정 선택
 def get_s3_config():
     """AWS S3 또는 MinIO 설정을 반환합니다."""
-    try:
-        # AWS S3 설정 시도
-        aws_config = settings.get_aws_s3_config()
-        logger.info("AWS S3 설정을 사용합니다.")
-        return aws_config, "aws"
-    except Exception as e:
-        logger.warning(f"AWS S3 설정 실패, MinIO 사용: {e}")
-        # MinIO 설정 사용
-        minio_config = settings.get_minio_config()
-        logger.info("MinIO 설정을 사용합니다.")
-        return minio_config, "minio"
+    # AWS S3 설정 주석 처리 - MinIO만 사용
+    # try:
+    #     # AWS S3 설정 시도
+    #     aws_config = settings.get_aws_s3_config()
+    #     logger.info("AWS S3 설정을 사용합니다.")
+    #     return aws_config, "aws"
+    # except Exception as e:
+    #     logger.warning(f"AWS S3 설정 실패, MinIO 사용: {e}")
+    # MinIO 설정 사용
+    minio_config = settings.get_minio_config()
+    logger.info("MinIO 설정을 사용합니다.")
+    return minio_config, "minio"
 
 # S3 클라이언트 생성
 s3_config, storage_type = get_s3_config()
 BUCKET_NAME = s3_config["bucket_name"]
 
 # boto3 클라이언트 생성
-if storage_type == "aws":
-    # AWS S3 클라이언트
-    s3_client = boto3.client(
-        "s3",
-        aws_access_key_id=s3_config["aws_access_key_id"],
-        aws_secret_access_key=s3_config["aws_secret_access_key"],
-        region_name=s3_config["region_name"]
-    )
-else:
-    # MinIO 클라이언트
-    s3_client = boto3.client(
-        "s3",
-        aws_access_key_id=s3_config["aws_access_key_id"],
-        aws_secret_access_key=s3_config["aws_secret_access_key"],
-        endpoint_url=s3_config["endpoint_url"],
-        region_name=s3_config["region_name"]
-    )
+# AWS S3 클라이언트 주석 처리 - MinIO만 사용
+# if storage_type == "aws":
+#     # AWS S3 클라이언트
+#     s3_client = boto3.client(
+#         "s3",
+#         aws_access_key_id=s3_config["aws_access_key_id"],
+#         aws_secret_access_key=s3_config["aws_secret_access_key"],
+#         region_name=s3_config["region_name"]
+#     )
+# else:
+# MinIO 클라이언트
+s3_client = boto3.client(
+    "s3",
+    aws_access_key_id=s3_config["aws_access_key_id"],
+    aws_secret_access_key=s3_config["aws_secret_access_key"],
+    endpoint_url=s3_config["endpoint_url"],
+    region_name=s3_config["region_name"]
+)
 
 def upload_file(file_bytes, filename, content_type):
     """파일을 S3에 업로드합니다."""
@@ -62,10 +64,11 @@ def upload_file(file_bytes, filename, content_type):
         )
         
         # URL 생성
-        if storage_type == "aws":
-            url = f"https://{BUCKET_NAME}.s3.{s3_config['region_name']}.amazonaws.com/{filename}"
-        else:
-            url = f"{s3_config['endpoint_url']}/{BUCKET_NAME}/{filename}"
+        # AWS S3 URL 생성 주석 처리 - MinIO만 사용
+        # if storage_type == "aws":
+        #     url = f"https://{BUCKET_NAME}.s3.{s3_config['region_name']}.amazonaws.com/{filename}"
+        # else:
+        url = f"{s3_config['endpoint_url']}/{BUCKET_NAME}/{filename}"
         
         logger.info(f"파일 업로드 성공: {filename} -> {url}")
         return url
@@ -86,10 +89,11 @@ def delete_file_from_s3(file_name: str):
 
 def get_file_url(file_name: str):
     """파일의 URL을 반환합니다."""
-    if storage_type == "aws":
-        return f"https://{BUCKET_NAME}.s3.{s3_config['region_name']}.amazonaws.com/{file_name}"
-    else:
-        return f"{s3_config['endpoint_url']}/{BUCKET_NAME}/{file_name}"
+    # AWS S3 URL 생성 주석 처리 - MinIO만 사용
+    # if storage_type == "aws":
+    #     return f"https://{BUCKET_NAME}.s3.{s3_config['region_name']}.amazonaws.com/{file_name}"
+    # else:
+    return f"{s3_config['endpoint_url']}/{BUCKET_NAME}/{file_name}"
 
 def list_files(prefix: str = ""):
     """S3에서 파일 목록을 조회합니다."""

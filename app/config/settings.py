@@ -72,15 +72,15 @@ class MinIOSettings(BaseSettings):
         env_prefix = "MINIO_"
 
 
-class AWSS3Settings(BaseSettings):
-    """AWS S3 관련 설정"""
-    access_key_id: str
-    secret_access_key: SecretStr
-    region: str = "ap-northeast-2"
-    bucket_name: str
+# class AWSS3Settings(BaseSettings):
+#     """AWS S3 관련 설정"""
+#     access_key_id: str
+#     secret_access_key: SecretStr
+#     region: str = "ap-northeast-2"
+#     bucket_name: str
 
-    class Config:
-        env_prefix = "AWS_S3_"
+#     class Config:
+#         env_prefix = "AWS_S3_"
 
 
 class OpenSearchSettings(BaseSettings):
@@ -136,7 +136,7 @@ class Settings:
         self.database = DatabaseSettings()
         self.pgadmin = PgAdminSettings()
         self.minio = MinIOSettings()
-        self.aws_s3 = AWSS3Settings()
+        # self.aws_s3 = AWSS3Settings()  # AWS S3 설정 주석 처리
         self.opensearch = OpenSearchSettings()
         self.jwt = JWTSettings()
         self.app = AppSettings()
@@ -169,14 +169,14 @@ class Settings:
             "bucket_name": self.minio.bucket_name
         }
 
-    def get_aws_s3_config(self) -> dict:
-        """AWS S3 설정 반환"""
-        return {
-            "aws_access_key_id": self.aws_s3.access_key_id,
-            "aws_secret_access_key": self.aws_s3.secret_access_key.get_secret_value(),
-            "region_name": self.aws_s3.region,
-            "bucket_name": self.aws_s3.bucket_name
-        }
+    # def get_aws_s3_config(self) -> dict:
+    #     """AWS S3 설정 반환"""
+    #     return {
+    #         "aws_access_key_id": self.aws_s3.access_key_id,
+    #         "aws_secret_access_key": self.aws_s3.secret_access_key.get_secret_value(),
+    #         "region_name": self.aws_s3.region,
+    #         "bucket_name": self.aws_s3.bucket_name
+    #     }
 
     def get_opensearch_config(self) -> dict:
         """OpenSearch 설정 반환"""

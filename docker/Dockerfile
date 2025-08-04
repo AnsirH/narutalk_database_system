@@ -37,7 +37,6 @@ COPY requirements/requirements-ml.txt .
 
 # 애플리케이션 코드 복사 (자주 변경되지 않는 것부터)
 COPY app/ ./app/
-COPY migrations/scripts/ ./migrations/scripts/
 COPY migrations/alembic/ ./migrations/alembic/
 COPY migrations/alembic.ini .
 
