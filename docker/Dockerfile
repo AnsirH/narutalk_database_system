@@ -1,5 +1,5 @@
 # 빌드 스테이지
-FROM python:3.11-slim AS builder
+FROM python:3.11.7-slim AS builder
 
 WORKDIR /app
 
@@ -17,7 +17,7 @@ RUN pip install --upgrade pip && \
     pip install -r requirements-base.txt
 
 # 실행 스테이지
-FROM python:3.11-slim
+FROM python:3.11.7-slim
 
 WORKDIR /app
 
@@ -35,9 +35,9 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 # ML 라이브러리 requirements 복사
 COPY requirements/requirements-ml.txt .
 
-# 애플리케이션 코드 복사 (자주 변경되지 않는 것부터)
+# 애플리케이션 코드 복사 (올바른 Python 패키지 구조로)
 COPY app/ ./app/
-COPY migrations/alembic/ ./migrations/alembic/
+COPY migrations/ ./migrations/
 COPY migrations/alembic.ini .
 
 # 포트 노출

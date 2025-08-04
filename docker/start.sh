@@ -17,11 +17,13 @@ echo "  - 현재 디렉토리: $(pwd)"
 echo "  - PYTHONPATH: $PYTHONPATH"
 echo "  - /app/.env 존재 여부:"
 ls -la /app/.env || echo "  ❌ /app/.env 없음"
+echo "  - /app/app 디렉토리 확인:"
+ls -la /app/app || echo "  ❌ /app/app 디렉토리 없음"
 
 until python -c "
 import sys
 import os
-sys.path.append('/app')
+sys.path.insert(0, '/app')
 
 try:
     from app.config.settings import settings
