@@ -7,7 +7,7 @@ from typing import List, Optional
 def save_document(doc_meta: DocumentBase) -> Document:
     db = SessionLocal()
     try:
-        db_doc = Document(**doc_meta.dict())
+        db_doc = Document(**doc_meta.model_dump())
         db.add(db_doc)
         db.commit()
         db.refresh(db_doc)

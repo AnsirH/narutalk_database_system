@@ -45,6 +45,13 @@ class TableUploadResult(BaseModel):
     message: str
     analysis: Optional[Dict] = None
 
+class BatchUploadResult(BaseModel):
+    total_files: int
+    successful_uploads: int
+    failed_uploads: int
+    results: List[Union[DocumentInfo, TableUploadResult]]
+    errors: List[Dict[str, str]]
+
 def _extract_csv_data(file_bytes: bytes) -> tuple[str, list]:
     """CSV 파일에서 데이터 추출"""
     if not PANDAS_AVAILABLE:
@@ -136,15 +143,137 @@ def extract_text_and_table(file_bytes: bytes, filename: str):
     
     return text, table_data, is_table_file
 
+def process_single_document(file: UploadFile, uploader_id: int, version: str = None) -> Union[DocumentInfo, TableUploadResult]:
+    """
+    단일 문서를 처리하는 공통 함수
+    
+    Args:
+        file: 업로드할 파일
+        uploader_id: 업로더 ID
+        version: 문서 버전 (선택사항)
+        
+    Returns:
+        DocumentInfo 또는 TableUploadResult: 처리 결과
+        
+    Raises:
+        HTTPException: 파일 크기 초과, 지원하지 않는 형식, 처리 오류 등
+    """
+    # 파일 크기 검증 (10MB 제한)
+    file.file.seek(0, 2)
+    file_size = file.file.tell()
+    file.file.seek(0)
+    
+    if file_size > 10 * 1024 * 1024:  # 10MB
+        raise HTTPException(status_code=400, detail="파일 크기가 너무 큽니다. 최대 10MB까지 업로드 가능합니다.")
+    
+    file_bytes = file.file.read()
+    file_extension = document_analyzer._get_file_extension(file.filename)
+    text, table_data, is_table_file = extract_text_and_table(file_bytes, file.filename)
+    
+    # 문서 제목이 없으면 파일명 사용 (확장자 제외)
+    doc_title = file.filename.rsplit('.', 1)[0] if '.' in file.filename else file.filename
+    
+    # 테이블 문서 처리 - Text2SQL 분류기 사용
+    if is_table_file and table_data:
+        logger.info(f"테이블 문서 Text2SQL 처리 시작: {file.filename}")
+        
+        # 1. 원본 파일을 S3에 저장
+        file_path = upload_file(file_bytes, file.filename, file.content_type)
+        
+        # 2. Text2SQL 분류기로 처리
+        try:
+            result = text2sql_classifier.classify_table_with_text2sql(
+                table_data=table_data,
+                table_description=doc_title
+            )
+            
+            if result['success']:
+                logger.info(f"Text2SQL 분류 완료: {result['message']}")
+                logger.info(f"분류 결과: {file.filename} -> {result['target_table']} (신뢰도: {result['confidence']:.2f})")
+                
+                # 3. 문서 메타데이터를 documents 테이블에 저장
+                meta = DocumentBase(
+                    doc_title=doc_title,
+                    doc_type=f"text2sql_{result['target_table']}",
+                    file_path=file_path,
+                    uploader_id=uploader_id,
+                    version=version,
+                    created_at=datetime.now(timezone.utc)
+                )
+                doc = save_document(meta)
+                
+                logger.info(f"테이블 문서 업로드 완료: {doc.doc_id} (타입: {result['target_table']})")
+                
+                return TableUploadResult(
+                    doc_title=doc_title,
+                    doc_type=f"text2sql_{result['target_table']}",
+                    uploader_id=uploader_id,
+                    version=version,
+                    created_at=datetime.now(timezone.utc),
+                    message=f"{result['message']} (문서 ID: {doc.doc_id})",
+                    analysis={
+                        'target_table': result['target_table'],
+                        'confidence': result['confidence'],
+                        'reasoning': result.get('reasoning', ''),
+                        'column_mapping': result.get('column_mapping', {}),
+                        'doc_id': doc.doc_id
+                    }
+                )
+            else:
+                logger.error(f"Text2SQL 분류 실패: {result['message']}")
+                raise HTTPException(status_code=500, detail=f"문서 분류 중 오류가 발생했습니다: {result['message']}")
+                
+        except Exception as e:
+            logger.error(f"Text2SQL 분류기 실행 실패: {e}")
+            raise HTTPException(status_code=500, detail=f"문서 처리 중 오류가 발생했습니다: {str(e)}")
+    
+    # 텍스트 문서 처리
+    else:
+        logger.info(f"텍스트 문서 처리 시작: {file.filename}")
+        
+        # 문서 타입 분석 (텍스트 문서용)
+        analyzed_doc_type = document_analyzer.analyze_document(text, file.filename)
+        logger.info(f"문서 분석 결과: {file.filename} -> {analyzed_doc_type}")
+        
+        # S3 업로드
+        file_path = upload_file(file_bytes, file.filename, file.content_type)
+        
+        # 문서 메타데이터 저장
+        meta = DocumentBase(
+            doc_title=doc_title,
+            doc_type=analyzed_doc_type,
+            file_path=file_path,
+            uploader_id=uploader_id,
+            version=version,
+            created_at=datetime.now(timezone.utc)
+        )
+        doc = save_document(meta)
+        
+        # OpenSearch 인덱싱 (텍스트 문서만)
+        if file_extension in document_analyzer.supported_extensions["text"]:
+            chunking_type = document_analyzer.get_chunking_type(analyzed_doc_type)
+            index_document_chunks(
+                doc_id=doc.doc_id,
+                doc_title=doc_title,
+                file_name=file.filename,
+                text=text,
+                document_type=chunking_type
+            )
+            logger.info(f"텍스트 문서 업로드 완료: {doc.doc_id} (타입: {analyzed_doc_type}, 청킹: {chunking_type})")
+        else:
+            logger.info(f"문서 업로드 완료: {doc.doc_id} (타입: {analyzed_doc_type})")
+        
+        return DocumentInfo.model_validate(doc)
+
 
 @router.post("/documents/upload", response_model=Union[DocumentInfo, TableUploadResult])
-def upload_document(file: UploadFile = File(...), doc_title: str = Form(...), uploader_id: int = Form(...), version: str = Form(None), user=Depends(get_current_user)):
+def upload_document(file: UploadFile = File(...), doc_title: str = Form(None), uploader_id: int = Form(...), version: str = Form(None), user=Depends(get_current_user)):
     """
     문서를 업로드하고 자동으로 타입을 분석하여 저장합니다.
     
     Args:
         file: 업로드할 파일
-        doc_title: 문서 제목
+        doc_title: 문서 제목 (선택사항, 없으면 파일명 사용)
         uploader_id: 업로더 ID
         version: 문서 버전 (선택사항)
         user: 현재 인증된 사용자
@@ -156,131 +285,51 @@ def upload_document(file: UploadFile = File(...), doc_title: str = Form(...), up
         HTTPException: 파일 크기 초과, 지원하지 않는 형식, 처리 오류 등
     """
     try:
-        # 파일 크기 검증 (10MB 제한)
-        file.file.seek(0, 2)  # 파일 끝으로 이동
-        file_size = file.file.tell()
-        file.file.seek(0)  # 파일 시작으로 복귀
-        
-        if file_size > 10 * 1024 * 1024:  # 10MB
-            raise HTTPException(status_code=400, detail="파일 크기가 너무 큽니다. 최대 10MB까지 업로드 가능합니다.")
-        
-        file_bytes = file.file.read()
-        file_extension = document_analyzer._get_file_extension(file.filename)
-        text, table_data, is_table_file = extract_text_and_table(file_bytes, file.filename)
-        
-        # 테이블 문서 처리 - Text2SQL 분류기 사용
-        if is_table_file and table_data:
-            logger.info(f"테이블 문서 Text2SQL 처리 시작: {file.filename}")
-            
-            # 1. 원본 파일을 S3에 저장
-            file_path = upload_file(file_bytes, file.filename, file.content_type)
-            
-            # 2. Text2SQL 분류기로 처리
-            try:
-                result = text2sql_classifier.classify_table_with_text2sql(
-                    table_data=table_data,
-                    table_description=doc_title
-                )
-                
-                if result['success']:
-                    logger.info(f"Text2SQL 분류 완료: {result['message']}")
-                    logger.info(f"분류 결과: {file.filename} -> {result['target_table']} (신뢰도: {result['confidence']:.2f})")
-                    
-                    # 3. 문서 메타데이터를 documents 테이블에 저장
-                    meta = DocumentBase(
-                        doc_title=doc_title,
-                        doc_type=f"text2sql_{result['target_table']}",
-                        file_path=file_path,
-                        uploader_id=uploader_id,
-                        version=version,
-                        created_at=datetime.now(timezone.utc)
-                    )
-                    doc = save_document(meta)
-                    
-                    logger.info(f"테이블 문서 업로드 완료: {doc.doc_id} (타입: {result['target_table']})")
-                    
-
-                    
-                    # 5. 문서 관계 자동 분석 및 생성
-                    try:
-                        relation_result = document_relation_analyzer.analyze_document_relations(
-                            doc_id=doc.doc_id,
-                            text=text,
-                            table_data=table_data
-                        )
-                        
-                        if relation_result['success']:
-                            logger.info(f"문서 관계 분석 완료: {relation_result['relations_created']}개 관계 생성")
-                        else:
-                            logger.warning(f"문서 관계 분석 실패: {relation_result['message']}")
-                            
-                    except Exception as e:
-                        logger.error(f"문서 관계 분석 중 오류: {e}")
-                    
-                    return TableUploadResult(
-                        doc_title=doc_title,
-                        doc_type=f"text2sql_{result['target_table']}",
-                        uploader_id=uploader_id,
-                        version=version,
-                        created_at=datetime.now(timezone.utc),
-                        message=f"{result['message']} (문서 ID: {doc.doc_id})",
-                        analysis={
-                            'target_table': result['target_table'],
-                            'confidence': result['confidence'],
-                            'reasoning': result.get('reasoning', ''),
-                            'column_mapping': result.get('column_mapping', {}),
-                            'doc_id': doc.doc_id
-                        }
-                    )
-                else:
-                    logger.error(f"Text2SQL 분류 실패: {result['message']}")
-                    raise HTTPException(status_code=500, detail=f"문서 분류 중 오류가 발생했습니다: {result['message']}")
-                    
-            except Exception as e:
-                logger.error(f"Text2SQL 분류기 실행 실패: {e}")
-                raise HTTPException(status_code=500, detail=f"문서 처리 중 오류가 발생했습니다: {str(e)}")
-        
-        # 텍스트 문서 처리
-        else:
-            logger.info(f"텍스트 문서 처리 시작: {file.filename}")
-            
-            # 문서 타입 분석 (텍스트 문서용)
-            analyzed_doc_type = document_analyzer.analyze_document(text, file.filename)
-            logger.info(f"문서 분석 결과: {file.filename} -> {analyzed_doc_type}")
-            
-            # S3 업로드
-            file_path = upload_file(file_bytes, file.filename, file.content_type)
-            
-            # 문서 메타데이터 저장
-            meta = DocumentBase(
-                doc_title=doc_title,
-                doc_type=analyzed_doc_type,
-                file_path=file_path,
-                uploader_id=uploader_id,
-                version=version,
-                created_at=datetime.now(timezone.utc)
-            )
-            doc = save_document(meta)
-            
-            # OpenSearch 인덱싱 (텍스트 문서만)
-            if file_extension in document_analyzer.supported_extensions["text"]:
-                chunking_type = document_analyzer.get_chunking_type(analyzed_doc_type)
-                index_document_chunks(
-                    doc_id=doc.doc_id,
-                    doc_title=doc_title,
-                    file_name=file.filename,
-                    text=text,
-                    document_type=chunking_type
-                )
-                logger.info(f"텍스트 문서 업로드 완료: {doc.doc_id} (타입: {analyzed_doc_type}, 청킹: {chunking_type})")
-            else:
-                logger.info(f"문서 업로드 완료: {doc.doc_id} (타입: {analyzed_doc_type})")
-            
-            return DocumentInfo.model_validate(doc)
-            
+        return process_single_document(file, uploader_id, version)
     except Exception as e:
         logger.error(f"문서 업로드 실패: {e}")
         raise HTTPException(status_code=500, detail=f"문서 업로드 중 오류가 발생했습니다: {str(e)}")
+
+@router.post("/documents/upload/batch", response_model=BatchUploadResult)
+def upload_documents_batch(files: List[UploadFile] = File(...), uploader_id: int = Form(...), version: str = Form(None), user=Depends(get_current_user)):
+    """
+    여러 문서를 한 번에 업로드합니다.
+    
+    Args:
+        files: 업로드할 파일들
+        uploader_id: 업로더 ID
+        version: 문서 버전 (선택사항)
+        user: 현재 인증된 사용자
+        
+    Returns:
+        BatchUploadResult: 배치 업로드 결과
+    """
+    total_files = len(files)
+    successful_uploads = 0
+    failed_uploads = 0
+    results = []
+    errors = []
+    
+    for file in files:
+        try:
+            result = process_single_document(file, uploader_id, version)
+            results.append(result)
+            successful_uploads += 1
+        except Exception as e:
+            error_msg = f"문서 업로드 실패: {str(e)}"
+            errors.append({"filename": file.filename, "error": error_msg})
+            failed_uploads += 1
+            logger.error(f"배치 업로드 중 오류 ({file.filename}): {e}")
+    
+    logger.info(f"배치 업로드 완료: 성공 {successful_uploads}/{total_files}, 실패 {failed_uploads}")
+    
+    return BatchUploadResult(
+        total_files=total_files,
+        successful_uploads=successful_uploads,
+        failed_uploads=failed_uploads,
+        results=results,
+        errors=errors
+    )
 
 @router.get("/documents/", response_model=List[DocumentInfo])
 def list_documents(user=Depends(get_current_user)):

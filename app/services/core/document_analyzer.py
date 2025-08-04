@@ -1,12 +1,13 @@
 """
 문서 타입 자동 분석 서비스
-문서의 확장자와 내용을 분석하여 자동으로 타입을 분류합니다.
+LLM을 사용하여 문서 내용을 분석하여 자동으로 타입을 분류합니다.
 """
 
 import re
 import logging
 from typing import Dict, Any, List, Tuple
 from enum import Enum
+from app.services.external.openai_service import openai_service
 
 logger = logging.getLogger(__name__)
 
@@ -116,7 +117,7 @@ class DocumentAnalyzer:
     
     def analyze_document(self, text: str, filename: str) -> str:
         """
-        문서를 분석하여 타입을 자동으로 분류합니다.
+        LLM을 사용하여 문서를 분석하여 타입을 자동으로 분류합니다.
         
         Args:
             text: 문서 내용
@@ -126,7 +127,7 @@ class DocumentAnalyzer:
             문서 타입 문자열 (doc_type에 저장될 값)
         """
         try:
-            logger.info(f"문서 분석 시작: {filename}")
+            logger.info(f"LLM 기반 문서 분석 시작: {filename}")
             
             # 1. 파일 확장자 확인
             file_extension = self._get_file_extension(filename)
@@ -135,16 +136,16 @@ class DocumentAnalyzer:
                 logger.warning(f"지원하지 않는 파일 형식: {filename}")
                 return DocumentType.REPORT.value  # 기본값
             
-            # 2. 확장자 기반 카테고리 분류
+            # 2. LLM 기반 문서 분류
             if file_extension in self.supported_extensions["table"]:
                 # 테이블 문서 분석
-                return self._analyze_table_document(text)
+                return self._analyze_table_document_with_llm(text, filename)
             else:
                 # 텍스트 문서 분석
-                return self._analyze_text_document(text)
+                return self._analyze_text_document_with_llm(text, filename)
             
         except Exception as e:
-            logger.error(f"문서 분석 중 오류 발생: {e}")
+            logger.error(f"LLM 문서 분석 중 오류 발생: {e}")
             return DocumentType.REPORT.value  # 기본값
     
     def _get_file_extension(self, filename: str) -> str:
@@ -157,47 +158,138 @@ class DocumentAnalyzer:
             return '.' + filename.split('.')[-1].lower()
         return ""
     
-    def _analyze_table_document(self, text: str) -> str:
-        """테이블 문서 분석"""
-        logger.info("테이블 문서 분석 시작")
+    def _analyze_table_document_with_llm(self, text: str, filename: str) -> str:
+        """LLM을 사용한 테이블 문서 분석"""
+        logger.info("LLM 기반 테이블 문서 분석 시작")
         
-        # 구체적인 타입 분류
-        performance_data_score = self._calculate_table_score(text, "performance_data")
-        customer_info_score = self._calculate_table_score(text, "customer_info")
-        hr_data_score = self._calculate_table_score(text, "hr_data")
-        # branch_target_score = self._calculate_table_score(text, "branch_target")
-        
-        # 각 분류별 점수 로깅
-        logger.info(f"실적 자료 점수: {performance_data_score:.2f}")
-        logger.info(f"거래처 정보 점수: {customer_info_score:.2f}")
-        logger.info(f"인사 자료 점수: {hr_data_score:.2f}")
-        # logger.info(f"지점별 목표 점수: {branch_target_score:.2f}")
-        
-        # 가장 높은 점수를 가진 타입 반환
-        scores = {
-            DocumentType.PERFORMANCE_DATA.value: performance_data_score,
-            DocumentType.CUSTOMER_INFO.value: customer_info_score,
-            DocumentType.HR_DATA.value: hr_data_score,
-            # DocumentType.BRANCH_TARGET.value: branch_target_score
-        }
-        max_score_type = max(scores, key=scores.get)
-        logger.info(f"최종 분류: {max_score_type} (점수: {scores[max_score_type]:.2f})")
-        return max_score_type
+        try:
+            # LLM 프롬프트 생성
+            prompt = self._create_table_document_prompt(text, filename)
+            
+            # LLM 호출
+            response = openai_service.chat_completion(
+                messages=[
+                    {"role": "system", "content": "당신은 문서 분류 전문가입니다. 주어진 문서를 정확히 분류해주세요."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.1,
+                max_tokens=100
+            )
+            
+            if response and response.strip():
+                # 응답에서 문서 타입 추출
+                doc_type = self._extract_document_type_from_llm_response(response)
+                logger.info(f"LLM 테이블 문서 분류 결과: {doc_type}")
+                return doc_type
+            else:
+                logger.warning("LLM 응답이 비어있음, 기본값 사용")
+                return DocumentType.PERFORMANCE_DATA.value
+                
+        except Exception as e:
+            logger.error(f"LLM 테이블 문서 분석 실패: {e}")
+            return DocumentType.PERFORMANCE_DATA.value  # 기본값
     
-    def _analyze_text_document(self, text: str) -> str:
-        """텍스트 문서 분석"""
-        logger.info("텍스트 문서 분석 시작")
+    def _analyze_text_document_with_llm(self, text: str, filename: str) -> str:
+        """LLM을 사용한 텍스트 문서 분석"""
+        logger.info("LLM 기반 텍스트 문서 분석 시작")
         
-        # 규정 문서 점수 계산
-        regulation_score = self._calculate_text_score(text, "regulation")
-        report_score = self._calculate_text_score(text, "report")
+        try:
+            # LLM 프롬프트 생성
+            prompt = self._create_text_document_prompt(text, filename)
+            
+            # LLM 호출
+            response = openai_service.chat_completion(
+                messages=[
+                    {"role": "system", "content": "당신은 문서 분류 전문가입니다. 주어진 문서를 정확히 분류해주세요."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.1,
+                max_tokens=100
+            )
+            
+            if response and response.strip():
+                # 응답에서 문서 타입 추출
+                doc_type = self._extract_document_type_from_llm_response(response)
+                logger.info(f"LLM 텍스트 문서 분류 결과: {doc_type}")
+                return doc_type
+            else:
+                logger.warning("LLM 응답이 비어있음, 기본값 사용")
+                return DocumentType.REPORT.value
+                
+        except Exception as e:
+            logger.error(f"LLM 텍스트 문서 분석 실패: {e}")
+            return DocumentType.REPORT.value  # 기본값
+    
+    def _create_table_document_prompt(self, text: str, filename: str) -> str:
+        """테이블 문서 분류를 위한 LLM 프롬프트 생성"""
+        return f"""
+다음 테이블 데이터를 분석하여 문서 타입을 분류해주세요.
+
+파일명: {filename}
+데이터 내용: {text[:2000]}  # 처음 2000자만 사용
+
+분류 가능한 타입:
+1. performance_data - 실적 자료 (매출, 판매, 성과 관련 데이터)
+2. customer_info - 거래처 정보 (고객, 병원, 의료기관 정보)
+3. hr_data - 인사 자료 (직원, 인사, 조직 관련 데이터)
+
+분류 기준:
+- performance_data: 매출액, 판매량, 실적, 성과, 매출 관련 컬럼이 있는 경우
+- customer_info: 고객명, 병원명, 의료기관, 환자수, 주소 등이 있는 경우
+- hr_data: 사번, 직원명, 부서, 직급, 급여, 인사 관련 데이터가 있는 경우
+
+응답 형식: 정확히 다음 중 하나만 답변해주세요.
+- performance_data
+- customer_info
+- hr_data
+
+분류 결과:
+"""
+    
+    def _create_text_document_prompt(self, text: str, filename: str) -> str:
+        """텍스트 문서 분류를 위한 LLM 프롬프트 생성"""
+        return f"""
+다음 텍스트 문서를 분석하여 문서 타입을 분류해주세요.
+
+파일명: {filename}
+문서 내용: {text[:2000]}  # 처음 2000자만 사용
+
+분류 가능한 타입:
+1. regulation - 내부 규정 (회사 규정, 정책, 지침, 규칙)
+2. report - 보고서 (분석 보고서, 현황 보고서, 결과 보고서)
+
+분류 기준:
+- regulation: "규정", "정책", "지침", "제1조", "제2조", "목적", "정의" 등이 포함된 경우
+- report: "보고서", "분석", "현황", "결과", "통계", "시장", "업계" 등이 포함된 경우
+
+응답 형식: 정확히 다음 중 하나만 답변해주세요.
+- regulation
+- report
+
+분류 결과:
+"""
+    
+    def _extract_document_type_from_llm_response(self, response: str) -> str:
+        """LLM 응답에서 문서 타입을 추출"""
+        response = response.strip().lower()
         
-        if regulation_score > report_score:
-            logger.info(f"내부 규정으로 분류 (점수: {regulation_score:.2f})")
-            return DocumentType.REGULATION.value
-        else:
-            logger.info(f"보고서로 분류 (점수: {report_score:.2f})")
-            return DocumentType.REPORT.value
+        # 지원하는 문서 타입들
+        valid_types = [
+            DocumentType.PERFORMANCE_DATA.value,
+            DocumentType.CUSTOMER_INFO.value,
+            DocumentType.HR_DATA.value,
+            DocumentType.REGULATION.value,
+            DocumentType.REPORT.value
+        ]
+        
+        # 응답에서 문서 타입 찾기
+        for doc_type in valid_types:
+            if doc_type in response:
+                return doc_type
+        
+        # 기본값 반환
+        logger.warning(f"LLM 응답에서 문서 타입을 찾을 수 없음: {response}")
+        return DocumentType.REPORT.value
     
     def _calculate_score(self, text: str, patterns: dict, weights: dict) -> float:
         """공통 점수 계산 메서드"""
@@ -220,13 +312,13 @@ class DocumentAnalyzer:
         return score
     
     def _calculate_table_score(self, text: str, table_type: str) -> float:
-        """테이블 문서 타입별 점수 계산"""
+        """테이블 문서 타입별 점수 계산 (기존 키워드 기반 - 백업용)"""
         patterns = self.table_patterns[table_type]
         weights = {"keywords": 0.6, "column_patterns": 0.4}
         return self._calculate_score(text, patterns, weights)
     
     def _calculate_text_score(self, text: str, text_type: str) -> float:
-        """텍스트 문서 타입별 점수 계산"""
+        """텍스트 문서 타입별 점수 계산 (기존 키워드 기반 - 백업용)"""
         patterns = self.text_patterns[text_type]
         weights = {"keywords": 0.5, "structure_patterns": 0.5}
         return self._calculate_score(text, patterns, weights)
